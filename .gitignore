@@ -1,0 +1,14 @@
+node_modules
+/build
+/.svelte-kit
+/package
+.env
+.env.*
+!.env.example
+.vercel
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
+coverage
+vite.config.*.timestamp-*
