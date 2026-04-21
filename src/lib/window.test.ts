@@ -20,6 +20,11 @@ describe('samplesFor', () => {
 		expect(rows).toHaveLength(1);
 	});
 
+	it('keeps both neighbouring hours for a half-past departure', () => {
+		const rows = samplesFor(day, at('2026-10-23T17:30:00Z'), 20);
+		expect(rows.map((r) => new Date(r.time * 1000).getUTCHours())).toEqual([17, 18]);
+	});
+
 	it('spans several hours for a long trip', () => {
 		expect(samplesFor(day, at('2026-10-23T07:00:00Z'), 120)).toHaveLength(3);
 	});

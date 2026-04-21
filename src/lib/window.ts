@@ -28,11 +28,12 @@ const HALF_HOUR = 1800;
  *
  * Each hourly value is treated as representative of the half hour either side of
  * its timestamp, so an 08:15 to 08:45 trip uses the 08:00 and 09:00 rows, and an
- * 08:00 to 08:20 trip uses only 08:00.
+ * 08:00 to 08:20 trip uses only 08:00. Boundaries are inclusive: a trip leaving at
+ * exactly 17:30 sits between two rows and must not ignore the earlier one.
  */
 export function samplesFor(forecast: Forecast, start: number, durationMin: number): HourSample[] {
 	const end = start + Math.max(1, durationMin) * 60;
-	return forecast.hours.filter((h) => h.time + HALF_HOUR > start && h.time - HALF_HOUR < end);
+	return forecast.hours.filter((h) => h.time + HALF_HOUR >= start && h.time - HALF_HOUR <= end);
 }
 
 export function windowStats(
