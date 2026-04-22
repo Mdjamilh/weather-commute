@@ -7,9 +7,19 @@ const opts = { units: 'metric' as const, timeZone: 'UTC' };
 const leave = at('2026-10-23T17:30:00Z');
 
 describe('discomfort', () => {
-	it('is zero when nothing crosses a threshold', () => {
-		const f = makeForecast('2026-10-23T00:00:00Z', 24, { 17: { precipProbability: 20 } });
+	it('is zero when dry and calm', () => {
+		const f = makeForecast('2026-10-23T00:00:00Z', 24);
 		expect(discomfort(windowStats(f, leave, 20)!, 'walk')).toBe(0);
+	});
+
+	it('has no cliff at the gust threshold', () => {
+		const f = makeForecast('2026-10-23T00:00:00Z', 24, {
+			8: { windGust: 34 },
+			12: { windGust: 36 }
+		});
+		const below = discomfort(windowStats(f, at('2026-10-23T08:00:00Z'), 20)!, 'bike');
+		const above = discomfort(windowStats(f, at('2026-10-23T12:00:00Z'), 20)!, 'bike');
+		expect(above - below).toBeLessThan(0.1);
 	});
 
 	it('grows with rain chance, amount and gusts', () => {
@@ -57,6 +67,23 @@ describe('suggestDeparture', () => {
 		const s = suggestDeparture(f, at('2026-10-23T12:00:00Z'), 10, 'walk', opts)!;
 		// 11:15 still touches the 12:00 row (it covers 11:30 to 12:30); 11:00 is clear.
 		expect(s.offsetMin).toBe(-45);
+	});
+
+	it('ignores a gust dip just below the threshold (found in the London fixture)', () => {
+		const f = makeForecast('2026-10-23T00:00:00Z', 24, {
+			7: { windGust: 34, precipProbability: 99 },
+			8: { windGust: 36, precipProbability: 100 },
+			9: { windGust: 36, precipProbability: 100 }
+		});
+		expect(suggestDeparture(f, at('2026-10-23T08:15:00Z'), 30, 'bike', opts)).toBeNull();
+	});
+
+	it('stays quiet when the usual trip is already fine for the mode', () => {
+		const f = makeForecast('2026-10-23T00:00:00Z', 24, {
+			17: { precipProbability: 35 },
+			18: { precipProbability: 35 }
+		});
+		expect(suggestDeparture(f, leave, 20, 'walk', opts)).toBeNull();
 	});
 
 	it('ignores marginal improvements', () => {

@@ -14,18 +14,24 @@ export const MIN_RATIO = 0.4;
 
 /**
  * A single number for "how unpleasant is this trip", used only to compare
- * departure times. Zero means nothing worth mentioning. Only weather that changes
- * hour to hour (rain and wind) counts, so the planner never says "leave later, it
- * is warmer", which nobody needs to be told.
+ * departure times. Only weather that changes hour to hour (rain and wind) counts,
+ * so the planner never says "leave later, it is warmer".
+ *
+ * The score is continuous on purpose. An earlier version only counted wind above
+ * the mode threshold, so gusts dropping from 36 to 34 km/h for a bike looked like a
+ * big win and produced a pointless "leave 30 min earlier" suggestion.
  */
 export function discomfort(stats: WindowStats, mode: Mode): number {
 	const r = RULES[mode];
-	const rain =
-		stats.precipProbMax >= r.rainChance
-			? stats.precipProbMax / 100 + Math.min(stats.precipMax / r.heavyRain, 2)
-			: 0;
-	const wind = stats.gustMax >= r.gust ? stats.gustMax / r.gust : 0;
+	const rain = (stats.precipProbMax / 100) * (1 + Math.min(stats.precipMax / r.heavyRain, 2));
+	const wind = Math.max(0, stats.gustMax - 0.7 * r.gust) / r.gust;
 	return rain + wind;
+}
+
+/** Whether the usual trip has rain or wind worth acting on for this mode. */
+export function needsAlternative(stats: WindowStats, mode: Mode): boolean {
+	const r = RULES[mode];
+	return stats.precipProbMax >= r.rainChance || stats.gustMax >= r.gust;
 }
 
 export interface Suggestion {
@@ -57,8 +63,8 @@ export function suggestDeparture(
 ): Suggestion | null {
 	const base = windowStats(forecast, start, durationMin);
 	if (!base) return null;
+	if (!needsAlternative(base, mode)) return null;
 	const baseScore = discomfort(base, mode);
-	if (baseScore === 0) return null;
 
 	let best: { offset: number; stats: WindowStats; score: number } | null = null;
 	for (const offset of OFFSETS) {
@@ -91,16 +97,17 @@ function describe(
 	const r = RULES[mode];
 	const when = `Leave ${Math.abs(offset)} min ${offset < 0 ? 'earlier' : 'later'} (${formatClock(alt.start, timeZone)})`;
 	const parts: string[] = [];
-	if (base.precipProbMax >= r.rainChance && alt.precipProbMax < base.precipProbMax) {
+	if (base.precipProbMax >= r.rainChance && base.precipProbMax - alt.precipProbMax >= 10) {
 		parts.push(
 			`rain chance ${formatPercent(alt.precipProbMax)} instead of ${formatPercent(base.precipProbMax)}`
 		);
 	}
-	if (base.gustMax >= r.gust && alt.gustMax < base.gustMax) {
+	if (base.gustMax >= r.gust && base.gustMax - alt.gustMax >= 5) {
 		parts.push(
 			`gusts ${formatSpeed(alt.gustMax, units)} instead of ${formatSpeed(base.gustMax, units)}`
 		);
 	}
-	if (parts.length === 0 && alt.precipMax < base.precipMax) parts.push('lighter rain');
+	if (parts.length === 0)
+		parts.push(alt.precipMax < base.precipMax ? 'lighter rain' : 'calmer conditions');
 	return `${when}: ${parts.join(', ')}`;
 }
