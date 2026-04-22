@@ -139,3 +139,16 @@ describe('suggestDeparture', () => {
 		expect(s.message).toBe('Leave 15 min earlier (07:45): gusts 12 mph instead of 37 mph');
 	});
 });
+
+describe('suggestion wording', () => {
+	it('mentions lighter rain when the chance stays high but the amount drops', () => {
+		const f = makeForecast('2026-10-23T00:00:00Z', 24, {
+			10: { precipProbability: 100, precipitation: 0.2 },
+			11: { precipProbability: 100, precipitation: 2.5 },
+			12: { precipProbability: 100, precipitation: 2.5 },
+			13: { precipProbability: 100, precipitation: 2.5 }
+		});
+		const s = suggestDeparture(f, at('2026-10-23T10:15:00Z'), 30, 'walk', opts)!;
+		expect(s.message).toBe('Leave 45 min earlier (09:30): lighter rain (0.2 mm instead of 2.5 mm)');
+	});
+});

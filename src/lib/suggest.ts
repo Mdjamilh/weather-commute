@@ -1,6 +1,6 @@
 import { formatClock } from './time';
 import type { Forecast, Mode, Units } from './types';
-import { formatPercent, formatSpeed } from './units';
+import { formatPercent, formatPrecip, formatSpeed } from './units';
 import { RULES } from './verdict';
 import { windowStats, type WindowStats } from './window';
 
@@ -10,7 +10,7 @@ export const OFFSETS = [-15, 15, -30, 30, -45, 45, -60, 60] as const;
 /** The best alternative must be at least this much better in absolute score... */
 export const MIN_GAIN = 0.2;
 /** ...and remove at least this share of the original discomfort. */
-export const MIN_RATIO = 0.4;
+export const MIN_RATIO = 0.3;
 
 /**
  * A single number for "how unpleasant is this trip", used only to compare
@@ -107,7 +107,16 @@ function describe(
 			`gusts ${formatSpeed(alt.gustMax, units)} instead of ${formatSpeed(base.gustMax, units)}`
 		);
 	}
-	if (parts.length === 0)
-		parts.push(alt.precipMax < base.precipMax ? 'lighter rain' : 'calmer conditions');
+	const chanceMentioned = parts.length > 0 && parts[0]!.startsWith('rain chance');
+	if (
+		!chanceMentioned &&
+		base.precipMax - alt.precipMax >= 0.3 &&
+		alt.precipMax <= base.precipMax * 0.7
+	) {
+		parts.push(
+			`lighter rain (${formatPrecip(alt.precipMax, units)} instead of ${formatPrecip(base.precipMax, units)})`
+		);
+	}
+	if (parts.length === 0) parts.push('drier and calmer overall');
 	return `${when}: ${parts.join(', ')}`;
 }
