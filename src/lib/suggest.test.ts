@@ -6,6 +6,8 @@ import { windowStats } from './window';
 const opts = { units: 'metric' as const, timeZone: 'UTC' };
 const leave = at('2026-10-23T17:30:00Z');
 
+// Reminder: rain and gusts on the row stamped HH:00 describe the hour before it.
+
 describe('discomfort', () => {
 	it('is zero when dry and calm', () => {
 		const f = makeForecast('2026-10-23T00:00:00Z', 24);
@@ -14,8 +16,8 @@ describe('discomfort', () => {
 
 	it('has no cliff at the gust threshold', () => {
 		const f = makeForecast('2026-10-23T00:00:00Z', 24, {
-			8: { windGust: 34 },
-			12: { windGust: 36 }
+			9: { windGust: 34 },
+			13: { windGust: 36 }
 		});
 		const below = discomfort(windowStats(f, at('2026-10-23T08:00:00Z'), 20)!, 'bike');
 		const above = discomfort(windowStats(f, at('2026-10-23T12:00:00Z'), 20)!, 'bike');
@@ -24,8 +26,8 @@ describe('discomfort', () => {
 
 	it('grows with rain chance, amount and gusts', () => {
 		const f = makeForecast('2026-10-23T00:00:00Z', 24, {
-			8: { precipProbability: 50, precipitation: 1 },
-			12: { precipProbability: 90, precipitation: 3, windGust: 60 }
+			9: { precipProbability: 50, precipitation: 1 },
+			13: { precipProbability: 90, precipitation: 3, windGust: 60 }
 		});
 		const light = discomfort(windowStats(f, at('2026-10-23T08:00:00Z'), 20)!, 'walk');
 		const heavy = discomfort(windowStats(f, at('2026-10-23T12:00:00Z'), 20)!, 'walk');
@@ -47,33 +49,34 @@ describe('suggestDeparture', () => {
 			19: { precipProbability: 70, precipitation: 1.2 }
 		});
 		const s = suggestDeparture(f, leave, 20, 'walk', opts)!;
-		// 17:15 still touches the 18:00 row; 17:00 to 17:20 only touches 17:00.
-		expect(s.offsetMin).toBe(-30);
-		expect(s.message).toBe('Leave 30 min earlier (17:00): rain chance 10% instead of 80%');
+		// Rain sets in at 17:00. Only a trip that is over by 17:00 stays dry.
+		expect(s.offsetMin).toBe(-60);
+		expect(s.message).toBe('Leave 60 min earlier (16:30): rain chance 10% instead of 80%');
 	});
 
 	it('suggests leaving later once a gusty spell passes', () => {
 		const f = makeForecast('2026-10-23T00:00:00Z', 24, {
 			8: { windGust: 50 },
-			9: { windGust: 15 }
+			9: { windGust: 50 },
+			10: { windGust: 15 }
 		});
 		const s = suggestDeparture(f, at('2026-10-23T08:00:00Z'), 15, 'bike', opts)!;
-		expect(s.offsetMin).toBe(45);
-		expect(s.message).toBe('Leave 45 min later (08:45): gusts 15 km/h instead of 50 km/h');
+		expect(s.offsetMin).toBe(60);
+		expect(s.message).toBe('Leave 60 min later (09:00): gusts 15 km/h instead of 50 km/h');
 	});
 
 	it('prefers the smallest shift among equally good options', () => {
+		// Rain from 11:00 to 12:00. Leaving at 10:30 and at 12:00 both stay dry.
 		const f = makeForecast('2026-10-23T00:00:00Z', 24, { 12: { precipProbability: 90 } });
-		const s = suggestDeparture(f, at('2026-10-23T12:00:00Z'), 10, 'walk', opts)!;
-		// 11:15 still touches the 12:00 row (it covers 11:30 to 12:30); 11:00 is clear.
-		expect(s.offsetMin).toBe(-45);
+		const s = suggestDeparture(f, at('2026-10-23T11:30:00Z'), 20, 'walk', opts)!;
+		expect(s.offsetMin).toBe(30);
 	});
 
 	it('ignores a gust dip just below the threshold (found in the London fixture)', () => {
 		const f = makeForecast('2026-10-23T00:00:00Z', 24, {
-			7: { windGust: 34, precipProbability: 99 },
-			8: { windGust: 36, precipProbability: 100 },
-			9: { windGust: 36, precipProbability: 100 }
+			8: { windGust: 34, precipProbability: 99 },
+			9: { windGust: 36, precipProbability: 100 },
+			10: { windGust: 36, precipProbability: 100 }
 		});
 		expect(suggestDeparture(f, at('2026-10-23T08:15:00Z'), 30, 'bike', opts)).toBeNull();
 	});
@@ -101,35 +104,38 @@ describe('suggestDeparture', () => {
 			18: { precipProbability: 80 },
 			19: { precipProbability: 80 }
 		});
-		const now = at('2026-10-23T17:10:00Z');
+		const now = at('2026-10-23T17:00:00Z');
 		expect(suggestDeparture(f, leave, 20, 'walk', { ...opts, now })).toBeNull();
-		expect(suggestDeparture(f, leave, 20, 'walk', opts)?.offsetMin).toBe(-30);
+		expect(suggestDeparture(f, leave, 20, 'walk', opts)?.offsetMin).toBe(-60);
 	});
 
 	it('uses mode thresholds: a shower that matters on a bike may not in a car', () => {
 		const f = makeForecast('2026-10-23T00:00:00Z', 24, {
-			8: { precipProbability: 45, precipitation: 0.6 }
+			9: { precipProbability: 45, precipitation: 0.6 }
 		});
 		const start = at('2026-10-23T08:00:00Z');
-		expect(suggestDeparture(f, start, 15, 'bike', opts)).not.toBeNull();
+		expect(suggestDeparture(f, start, 15, 'bike', opts)?.offsetMin).toBe(-15);
 		expect(suggestDeparture(f, start, 15, 'car', opts)).toBeNull();
 	});
 
 	it('returns null when alternatives fall outside the forecast', () => {
-		const f = makeForecast('2026-10-23T00:00:00Z', 2, { 0: { precipProbability: 90 } });
-		expect(suggestDeparture(f, at('2026-10-23T00:00:00Z'), 10, 'walk', opts)?.offsetMin).toBe(45);
-		expect(suggestDeparture(f, at('2026-10-23T05:00:00Z'), 10, 'walk', opts)).toBeNull();
+		const short = makeForecast('2026-10-23T00:00:00Z', 2, { 1: { precipProbability: 90 } });
+		expect(suggestDeparture(short, at('2026-10-23T00:00:00Z'), 10, 'walk', opts)).toBeNull();
+		const longer = makeForecast('2026-10-23T00:00:00Z', 3, { 1: { precipProbability: 90 } });
+		expect(suggestDeparture(longer, at('2026-10-23T00:00:00Z'), 10, 'walk', opts)?.offsetMin).toBe(
+			60
+		);
 	});
 
 	it('words imperial gusts in mph', () => {
 		const f = makeForecast('2026-10-23T00:00:00Z', 24, {
-			8: { windGust: 60 },
-			9: { windGust: 20 }
+			8: { windGust: 20 },
+			9: { windGust: 60 }
 		});
 		const s = suggestDeparture(f, at('2026-10-23T08:00:00Z'), 15, 'walk', {
 			...opts,
 			units: 'imperial'
 		})!;
-		expect(s.message).toContain('gusts 12 mph instead of 37 mph');
+		expect(s.message).toBe('Leave 15 min earlier (07:45): gusts 12 mph instead of 37 mph');
 	});
 });

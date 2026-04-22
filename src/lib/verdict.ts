@@ -109,9 +109,6 @@ export function verdictFor(stats: WindowStats, mode: Mode, options: VerdictOptio
 	const r = RULES[mode];
 	const { units, timeZone } = options;
 	const clock = (t: number) => formatClock(t, timeZone);
-	// Name the departure time when the hour in question is the one you leave in;
-	// name the hour itself when it is later in the trip.
-	const around = (t: number) => clock(Math.abs(t - stats.start) <= 1800 ? stats.start : t);
 	const reasons: Reason[] = [];
 	const add = (kind: ReasonKind, level: Reason['level'], message: string) =>
 		reasons.push({ kind, level, message });
@@ -133,15 +130,15 @@ export function verdictFor(stats: WindowStats, mode: Mode, options: VerdictOptio
 		add(
 			'ice',
 			mode === 'bike' || mode === 'car' ? 'bad' : 'caution',
-			`Ice risk: ${formatTemp(stats.tempMin, units)} with precipitation around ${around(stats.wettestTime)}`
+			`Ice risk: ${formatTemp(stats.tempMin, units)} with precipitation around ${clock(stats.wettestTime)}`
 		);
 	}
 
 	if (snowy) {
-		add('snow', r.exposed ? 'bad' : 'caution', `Snow around ${around(stats.wettestTime)}`);
+		add('snow', r.exposed ? 'bad' : 'caution', `Snow around ${clock(stats.wettestTime)}`);
 	} else if (stats.precipProbMax >= r.rainChance) {
 		const heavy = stats.precipMax >= r.heavyRain;
-		const chance = `${formatPercent(stats.precipProbMax)} chance of rain around ${around(stats.wettestTime)}`;
+		const chance = `${formatPercent(stats.precipProbMax)} chance of rain around ${clock(stats.wettestTime)}`;
 		if (heavy) {
 			add(
 				'rain',
@@ -158,13 +155,13 @@ export function verdictFor(stats: WindowStats, mode: Mode, options: VerdictOptio
 		add(
 			'wind',
 			'bad',
-			`Dangerous gusts up to ${formatSpeed(stats.gustMax, units)} around ${around(stats.windiestTime)}`
+			`Dangerous gusts up to ${formatSpeed(stats.gustMax, units)} around ${clock(stats.windiestTime)}`
 		);
 	} else if (stats.gustMax >= r.gust) {
 		add(
 			'wind',
 			'caution',
-			`${mode === 'bike' ? 'Hard riding' : 'Gusty'}: up to ${formatSpeed(stats.gustMax, units)} around ${around(stats.windiestTime)}`
+			`${mode === 'bike' ? 'Hard riding' : 'Gusty'}: up to ${formatSpeed(stats.gustMax, units)} around ${clock(stats.windiestTime)}`
 		);
 	}
 

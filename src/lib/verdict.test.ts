@@ -29,16 +29,21 @@ describe('verdictFor: good conditions', () => {
 
 describe('verdictFor: rain', () => {
 	it('matches the example from the brief', () => {
-		const f = makeForecast('2026-10-23T00:00:00Z', 24, { 17: { precipProbability: 70 } });
+		// The 18:00 row carries the rain chance for 17:00 to 18:00.
+		const f = makeForecast('2026-10-23T00:00:00Z', 24, { 18: { precipProbability: 70 } });
 		const stats = windowStats(f, at('2026-10-23T17:30:00Z'), 20)!;
 		expect(verdictFor(stats, 'walk', opts).headline).toBe(
 			'Bring an umbrella: 70% chance of rain around 17:30'
 		);
 	});
 
-	it('names the wettest hour, not the departure hour', () => {
-		const v = verdictFor(trip({ precipProbability: 20 }, { precipProbability: 70 }), 'walk', opts);
-		expect(v.headline).toBe('Bring an umbrella: 70% chance of rain around 09:00');
+	it('names when the rain starts on a long trip', () => {
+		const f = makeForecast('2026-10-23T00:00:00Z', 24, {
+			8: { precipProbability: 20 },
+			9: { precipProbability: 70 }
+		});
+		const v = verdictFor(windowStats(f, at('2026-10-23T07:00:00Z'), 120)!, 'walk', opts);
+		expect(v.headline).toBe('Bring an umbrella: 70% chance of rain around 08:00');
 	});
 
 	it('is stricter for bikes than for cars', () => {
@@ -169,7 +174,7 @@ describe('verdictFor: ordering', () => {
 	});
 
 	it('reports clock times in the location zone', () => {
-		const f = makeForecast('2026-10-23T00:00:00Z', 24, { 7: { precipProbability: 70 } });
+		const f = makeForecast('2026-10-23T00:00:00Z', 24, { 8: { precipProbability: 70 } });
 		// 07:15 UTC is 08:15 in London (BST) on 23 Oct.
 		const stats = windowStats(f, at('2026-10-23T07:15:00Z'), 20)!;
 		expect(verdictFor(stats, 'walk', { units: 'metric', timeZone: 'Europe/London' }).headline).toBe(
