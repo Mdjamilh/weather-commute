@@ -1,0 +1,125 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`planWeek across DST with recorded forecasts > matches the recorded London week (snapshot of headlines) 1`] = `
+[
+  {
+    "date": "2026-10-23",
+    "trips": [
+      {
+        "at": "08:15",
+        "headline": "Pack rain gear: 100% chance of rain around 08:15",
+        "level": "caution",
+        "suggestion": "Leave 45 min later (09:00): gusts 30 km/h instead of 36 km/h, lighter rain (0.2 mm instead of 1.2 mm)",
+      },
+      {
+        "at": "17:30",
+        "headline": "Dangerous gusts up to 64 km/h around 17:30",
+        "level": "bad",
+        "suggestion": null,
+      },
+    ],
+  },
+  {
+    "date": "2026-10-24",
+    "trips": [
+      {
+        "at": "08:15",
+        "headline": "Good to go: 8°C and dry around 08:15",
+        "level": "good",
+        "suggestion": null,
+      },
+      {
+        "at": "17:30",
+        "headline": "Heavy rain: 2.6 mm in an hour, 100% chance of rain around 17:30. Consider another way in",
+        "level": "bad",
+        "suggestion": null,
+      },
+    ],
+  },
+  {
+    "date": "2026-10-25",
+    "trips": [
+      {
+        "at": "08:15",
+        "headline": "Hard riding: up to 54 km/h around 08:15",
+        "level": "caution",
+        "suggestion": null,
+      },
+      {
+        "at": "17:30",
+        "headline": "Hard riding: up to 43 km/h around 17:30",
+        "level": "caution",
+        "suggestion": null,
+      },
+    ],
+  },
+  {
+    "date": "2026-10-26",
+    "trips": [
+      {
+        "at": "08:15",
+        "headline": "Pack rain gear: 53% chance of rain around 08:15",
+        "level": "caution",
+        "suggestion": "Leave 45 min earlier (07:30): rain chance 36% instead of 53%",
+      },
+      {
+        "at": "17:30",
+        "headline": "Hard riding: up to 45 km/h around 17:30",
+        "level": "caution",
+        "suggestion": null,
+      },
+    ],
+  },
+  {
+    "date": "2026-10-27",
+    "trips": [
+      {
+        "at": "08:15",
+        "headline": "Pack rain gear: 33% chance of rain around 08:15",
+        "level": "caution",
+        "suggestion": null,
+      },
+      {
+        "at": "17:30",
+        "headline": "Pack rain gear: 29% chance of rain around 17:30",
+        "level": "caution",
+        "suggestion": null,
+      },
+    ],
+  },
+  {
+    "date": "2026-10-28",
+    "trips": [
+      {
+        "at": "08:15",
+        "headline": "Good to go: 11°C and dry around 08:15",
+        "level": "good",
+        "suggestion": null,
+      },
+      {
+        "at": "17:30",
+        "headline": "Good to go: 16°C and dry around 17:30",
+        "level": "good",
+        "suggestion": null,
+      },
+    ],
+  },
+  {
+    "date": "2026-10-29",
+    "trips": [
+      {
+        "at": "08:15",
+        "headline": "Good to go: 10°C and dry around 08:15",
+        "level": "good",
+        "suggestion": null,
+      },
+      {
+        "at": "17:30",
+        "headline": "Good to go: 14°C and dry around 17:30",
+        "level": "good",
+        "suggestion": null,
+      },
+    ],
+  },
+]
+`;
