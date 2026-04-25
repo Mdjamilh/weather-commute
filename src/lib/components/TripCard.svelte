@@ -16,6 +16,12 @@
 	const level = $derived(trip.verdict?.level ?? 'none');
 	const levelText = { good: 'Good', caution: 'Heads up', bad: 'Rethink', none: 'No data' } as const;
 	const extra = $derived(trip.verdict?.reasons.slice(1) ?? []);
+	const tempRange = $derived.by(() => {
+		if (!trip.stats) return '';
+		const lo = formatTemp(trip.stats.tempMin, units);
+		const hi = formatTemp(trip.stats.tempMax, units);
+		return lo === hi ? lo : `${lo} to ${hi}`;
+	});
 </script>
 
 <article
@@ -52,13 +58,7 @@
 			<dl class="stats">
 				<div>
 					<dt>Temperature</dt>
-					<dd>
-						{formatTemp(
-							trip.stats.tempMin,
-							units
-						)}{#if Math.round(trip.stats.tempMax) !== Math.round(trip.stats.tempMin)}
-							to {formatTemp(trip.stats.tempMax, units)}{/if}
-					</dd>
+					<dd>{tempRange}</dd>
 				</div>
 				<div>
 					<dt>Feels like</dt>
