@@ -110,15 +110,18 @@ export function formatClock(unix: number, timeZone: string): string {
 	return `${pad(p.hour)}:${pad(p.minute)}`;
 }
 
-/** Short weekday label such as "Sun 25 Oct" for a YYYY-MM-DD date. */
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/**
+ * Short weekday label such as "Sun 25 Oct" for a YYYY-MM-DD date. Built by hand
+ * because Intl output differs between ICU versions (Node prints "Sun 25 Oct",
+ * Chromium "Sun, 25 Oct").
+ */
 export function formatDay(date: string): string {
 	const [y, m, d] = date.split('-').map(Number);
-	return new Intl.DateTimeFormat('en-GB', {
-		timeZone: 'UTC',
-		weekday: 'short',
-		day: 'numeric',
-		month: 'short'
-	}).format(new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1)));
+	const t = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1));
+	return `${WEEKDAYS[t.getUTCDay()]} ${t.getUTCDate()} ${MONTHS[t.getUTCMonth()]}`;
 }
 
 /** Shifts an "HH:MM" clock by a number of minutes, wrapping around midnight. */
