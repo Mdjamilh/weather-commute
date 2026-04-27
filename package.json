@@ -20,6 +20,7 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.5",
+		"@playwright/test": "1.55.1",
 		"@sveltejs/adapter-static": "3.0.10",
 		"@sveltejs/kit": "2.70.3",
 		"@sveltejs/vite-plugin-svelte": "7.3.1",
