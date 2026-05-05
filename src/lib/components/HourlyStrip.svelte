@@ -81,6 +81,7 @@
 		{/each}
 	</svg>
 	<figcaption>
+		<span class="caption">{caption}</span>
 		<span class="key rain"></span> rain chance
 		<span class="key temp"></span> temperature
 		<span class="key marker"></span> your departures
@@ -140,6 +141,11 @@
 		margin-top: 0.35rem;
 		font-size: 0.78rem;
 		color: var(--muted);
+	}
+	.caption {
+		margin-right: 0.5rem;
+		font-weight: 600;
+		color: var(--text);
 	}
 	.key {
 		display: inline-block;
