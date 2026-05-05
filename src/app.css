@@ -126,3 +126,8 @@ select {
 		animation: none !important;
 	}
 }
+
+/* Wrapper from app.html, styled here so the CSP needs no inline styles. */
+.app-root {
+	display: contents;
+}
