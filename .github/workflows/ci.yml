@@ -24,6 +24,11 @@ jobs:
       - run: npx prettier --check .
       - run: npm run check
       - run: npm test
+      # Every date calculation must depend on the location's zone, never the machine's.
+      - name: Unit tests in far-off machine time zones
+        run: |
+          TZ=Pacific/Kiritimati npm test
+          TZ=America/St_Johns npm test
       - run: npm run build
       - run: npm audit --audit-level=high
 
