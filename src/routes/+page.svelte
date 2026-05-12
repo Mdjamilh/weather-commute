@@ -5,6 +5,7 @@
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import TripCard from '$lib/components/TripCard.svelte';
 	import { fetchForecast } from '$lib/forecast';
+	import { isStale } from '$lib/freshness';
 	import { placeLabel } from '$lib/geocode';
 	import { planWeek, type DayPlan, type TripPlan } from '$lib/plan';
 	import { DEFAULT_SETTINGS, loadSettings, saveSettings, type Settings } from '$lib/settings';
@@ -36,7 +37,17 @@
 		settings = loadSettings(storage());
 		ready = true;
 		const timer = setInterval(() => (now = Math.floor(Date.now() / 1000)), 60_000);
-		return () => clearInterval(timer);
+		// Coming back to a tab left open overnight should not show yesterday's forecast.
+		const onVisible = () => {
+			if (document.visibilityState !== 'visible') return;
+			now = Math.floor(Date.now() / 1000);
+			if (home?.status === 'ready' && isStale(home.fetchedAt, Date.now())) refresh();
+		};
+		document.addEventListener('visibilitychange', onVisible);
+		return () => {
+			clearInterval(timer);
+			document.removeEventListener('visibilitychange', onVisible);
+		};
 	});
 
 	$effect(() => {
