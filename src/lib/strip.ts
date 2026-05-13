@@ -107,6 +107,13 @@ export function stripGeometry(hours: HourSample[], options: StripOptions): Strip
 		.filter((m) => m.time >= first - 1800 && m.time <= last + 1800)
 		.map((m) => ({ x: xOf(m.time), label: m.label }));
 
+	// A label near the top would sit on a marker caption; drop it below the line instead.
+	for (const label of tempLabels) {
+		if (label.y < PAD_TOP + 8 && markers.some((m) => Math.abs(m.x - label.x) < 36)) {
+			label.y += 18;
+		}
+	}
+
 	return {
 		width,
 		height,

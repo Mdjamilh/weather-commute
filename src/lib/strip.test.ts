@@ -63,6 +63,17 @@ describe('stripGeometry', () => {
 		expect(g.markers).toEqual([{ x: 120, label: 'Out' }]);
 	});
 
+	it('moves a high temperature label out of the way of a marker caption', () => {
+		const g = stripGeometry(f.hours, {
+			...base,
+			markers: [{ time: at('2026-10-23T08:00:00Z'), label: 'Out' }]
+		});
+		const warmest = g.tempLabels.find((l) => l.text === '12°')!;
+		expect(warmest.y).toBeCloseTo(31);
+		const free = stripGeometry(f.hours, base).tempLabels.find((l) => l.text === '12°')!;
+		expect(free.y).toBeCloseTo(13);
+	});
+
 	it('copes with empty and single-hour input', () => {
 		expect(stripGeometry([], base).tempPath).toBe('');
 		const one = stripGeometry(f.hours.slice(0, 1), base);
